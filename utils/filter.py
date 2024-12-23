@@ -1,100 +1,92 @@
-from datetime import datetime
 
-def generate_query_from_conditions(conditions):
-    """
-    조건에 맞는 SQL 쿼리를 동적으로 생성.
-    :param conditions: dict - 필터링 조건
-    :return: str - SQL 쿼리
-    """
-    base_query = "SELECT * FROM flight_data WHERE 1=1"
+from utils.date_utils import DateUtils
+from utils.day_utils import DayUtils
+from utils.time_utils import TimeUtils
 
-    # air_id 필터링
-    if "air_id" in conditions:
-        base_query += f" AND air_id = '{conditions['air_id']}'"
+class FilterManager:
+    def __init__(self):
+        self.date_utils = DateUtils()
+        self.day_utils = DayUtils()
+        self.time_utils = TimeUtils()
 
-    # is_layover 필터링
-    if "is_layover" in conditions:
-        base_query += f" AND is_layover = {conditions['is_layover']}"
+    # 출발 시간과 도착 시간 필터링하는 공통 함수
+    def handle_time_filters(self, time_conditions, prefix, base_query):
 
-    # 출발 공항 코드 필터링
-    if "airport_code_dep" in conditions:
-        base_query += f" AND airport_code_dep = '{conditions['airport_code_dep']}'"
+        # 날짜 필터링
+        if "date" in time_conditions:
+            base_query += self.date_utils.build_date_conditions(time_conditions["date"], prefix)
 
-    # 출발 공항 이름 필터링
-    if "departure_airport" in conditions:
-        base_query += f" AND departure_airport = '{conditions['departure_airport']}'"
+        # 요일 필터링
+        if "day" in time_conditions:
+            base_query += self.day_utils.build_weekday_condition(time_conditions["day"], prefix)
 
-    # 출발 국가 필터링
-    if "departure_country" in conditions:
-        base_query += f" AND departure_country = '{conditions['departure_country']}'"
+        # 시간 필터링
+        if "time" in time_conditions:
+            base_query += self.time_utils.build_time_conditions(time_conditions["time"], prefix)
 
-    # 도착 공항 코드 필터링
-    if "airport_code_arr" in conditions:
-        base_query += f" AND airport_code_arr = '{conditions['airport_code_arr']}'"
+        return base_query
 
-    # 도착 공항 이름 필터링
-    if "arrival_airport" in conditions:
-        base_query += f" AND arrival_airport = '{conditions['arrival_airport']}'"
+    # 조건이 두 개 이상일 경우 더하는 함수  
+    def _add_condition(self, base_query, column, value, is_list=False):
+        if value != "all":
+            if is_list:
+                values = "', '".join(value)
+                base_query += f" AND {column} IN ('{values}')\n"
+            else:
+                base_query += f" AND {column} = '{value}'\n"
+        return base_query
 
-    # 도착 국가 필터링
-    if "arrival_country" in conditions:
-        base_query += f" AND arrival_country = '{conditions['arrival_country']}'"
+    # 조건에 맞는 SQL 쿼리문 작성 함수
+    def generate_query_from_conditions(self, conditions):
+        base_query = "SELECT * FROM flight_data WHERE 1=1\n"
 
-    # 항공사 필터링
-    if "airline" in conditions:
-        base_query += f" AND airline = '{conditions['airline']}'"
+        # LCC, FSC, 국내 항공사 분류
+        lcc_airlines = ["제주항공", "진에어", "티웨이항공", "에어부산", "에어서울", "이스타항공", "피치항공"]
+        fsc_airlines = ["대한항공", "아시아나항공", "전일본공수", "일본 항공"]
+        domestic_airlines = ["대한항공", "아시아나항공", "에어부산", "에어서울", "이스타항공", "제주항공", "진에어", "티웨이항공"]
 
-    # 출발 UTC 시간 필터링
-    if "depart_timestamp_utc" in conditions:
-        base_query += f" AND depart_timestamp_utc = '{conditions['depart_timestamp_utc']}'"
+        # 항공사 필터링 (airline)
+        if "airline" in conditions and conditions["airline"] != "all":
+            airline = conditions["airline"]
+            if airline == "lcc":
+                base_query = self._add_condition(base_query, "airline", lcc_airlines, is_list=True)
+            elif airline == "fsc":
+                base_query = self._add_condition(base_query, "airline", fsc_airlines, is_list=True)
+            elif airline == "국내 항공사":
+                base_query = self._add_condition(base_query, "airline", domestic_airlines, is_list=True)
+            elif isinstance(airline, list):  # 사용자가 직접 리스트를 넘긴 경우
+                base_query = self._add_condition(base_query, "airline", airline, is_list=True)
+            else:  # 단일 항공사 문자열인 경우
+                base_query = self._add_condition(base_query, "airline", airline)
 
-    # 도착 UTC 시간 필터링
-    if "arrival_timestamp_utc" in conditions:
-        base_query += f" AND arrival_timestamp_utc = '{conditions['arrival_timestamp_utc']}'"
+        # 출발 국가 필터링 (depart_country)
+        if "depart_country" in conditions:
+            base_query = self._add_condition(base_query, "depart_country",conditions["depart_country"], is_list=isinstance(conditions["depart_country"], list))
+        
+        # 도착 국가 필터링 (arrival_country)
+        if "arrival_country" in conditions:
+            base_query = self._add_condition(base_query, "arrival_country", conditions["arrival_country"], is_list=isinstance(conditions["arrival_country"], list))
+        
+        # 출발 공항 필터링 (depart_ariport)
+        if "depart_airport" in conditions:
+            base_query = self._add_condition(base_query, "depart_airport", conditions["depart_airport"], is_list=isinstance(conditions["depart_airport"], list))
+        
+        # 도착 공항 필터링 (arrival_airport)
+        if "arrival_airport" in conditions:
+            base_query = self._add_condition(base_query, "arrival_airport", conditions["arrival_airport"], is_list=isinstance(conditions["arrival_airport"], list))
 
-    # 출발 시간 (현지) 필터링
-    if "departure_time_in_dep" in conditions:
-        departure_time = conditions["departure_time_in_dep"]
-    
-    try:
-        # 시간이 포함된 경우 (TIMESTAMP)
-        datetime.strptime(departure_time, "%Y-%m-%d %H:%M:%S")
-        base_query += f" AND departure_time_in_dep = '{departure_time}'"
-    except ValueError:
-        # 날짜만 포함된 경우 (DATE)
-        base_query += f" AND DATE(departure_time_in_dep) = '{departure_time}'"
+        # 출발 시간 필터링 (depart_time(dep))
+        if "depart_time(dep)" in conditions:
+            depart_conditions = conditions["depart_time(dep)"]
+            base_query = self.handle_time_filters(depart_conditions, "depart_time_dep", base_query)
 
+        # 도착 시간 필터링 (arrival_time(arr))
+        if "arrival_time(arr)" in conditions:
+            arrival_conditions = conditions["arrival_time(arr)"]
+            base_query = self.handle_time_filters(arrival_conditions, "arrival_time_arr", base_query)
 
-    # 도착 시간 (현지) 필터링
-    if "arrival_time_in_dep" in conditions:
-        base_query += f" AND arrival_time_in_dep = '{conditions['arrival_time_in_dep']}'"
-
-    # 출발 시간 (도착지 시간대) 필터링
-    if "departure_time_in_arr" in conditions:
-        base_query += f" AND departure_time_in_arr = '{conditions['departure_time_in_arr']}'"
-
-    # 도착 시간 (도착지 시간대) 필터링
-    if "arrival_time_in_arr" in conditions:
-        base_query += f" AND arrival_time_in_arr = '{conditions['arrival_time_in_arr']}'"
-
-    # 좌석 등급 필터링
-    if "seat_class" in conditions:
-        base_query += f" AND seat_class = '{conditions['seat_class']}'"
-
-    # AGT 코드 필터링
-    if "agt_code" in conditions:
-        base_query += f" AND agt_code = '{conditions['agt_code']}'"
-
-    # 운임 필터링
-    if "fare" in conditions:
-        base_query += f" AND fare = {conditions['fare']}"
-
-    # 여정 시간 필터링
-    if "journey_time" in conditions:
-        base_query += f" AND journey_time = {conditions['journey_time']}"
-
-    # 데이터 수집 날짜 필터링
-    if "fetched_date" in conditions:
-        base_query += f" AND fetched_date = '{conditions['fetched_date']}'"
-
-    return base_query
+        # 요금 조건 필터링 (fare)
+        if "fare" in conditions:
+            base_query += " AND fare <= {}\n".format(float(conditions["fare"]))
+            
+        return base_query
