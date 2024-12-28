@@ -32,8 +32,8 @@ class DateUtils:
         month_numbers = {f"{i}월": i for i in range(1, 13)}  # 1월 ~ 12월 매핑
         selected_months = [str(month_numbers[month]) for month in month_condition if month in month_numbers]
         if selected_months:
-            return f" AND EXTRACT(MONTH FROM {prefix}) IN ({', '.join(selected_months)})\n"
-        return ""
+            return f"EXTRACT(MONTH FROM {prefix}) IN ({', '.join(selected_months)})\n"
+        return None
     
     # 주, 월, 날짜 조건에 맞는 SQL 구문을 생성하는 함수    
     def build_date_condition(self, date, prefix):
@@ -54,11 +54,13 @@ class DateUtils:
 
     # 날짜 조건의 리스트 유무에 따라 SQL 구문을 생성하는 함수
     def build_date_conditions(self, date_condition, prefix):
+        if not date_condition:
+            return None
         if isinstance(date_condition, list):
             date_conditions = [self.build_date_condition(date, prefix) for date in date_condition]
         else:
             date_conditions = [self.build_date_condition(date_condition, prefix)]
 
         if date_conditions:
-            return " AND (" + " OR ".join(date_conditions) + ")\n"
-        return ""
+            return "(" + " OR ".join(date_conditions) + ")\n"
+        return None

@@ -11,18 +11,29 @@ class FilterManager:
 
     # 출발 시간과 도착 시간 필터링하는 공통 함수
     def handle_time_filters(self, time_conditions, prefix, base_query):
+        conditions = []
 
         # 날짜 필터링
         if "date" in time_conditions:
-            base_query += self.date_utils.build_date_conditions(time_conditions["date"], prefix)
+            month_condition = self.date_utils.build_date_conditions(time_conditions["date"], prefix)
+            if month_condition:  # 유효한 조건만 추가
+                conditions.append(month_condition)
 
         # 요일 필터링
         if "day" in time_conditions:
-            base_query += self.day_utils.build_weekday_condition(time_conditions["day"], prefix)
+            day_condition = self.day_utils.build_weekday_condition(time_conditions["day"], prefix)
+            if day_condition:
+                conditions.append(day_condition)
 
         # 시간 필터링
         if "time" in time_conditions:
-            base_query += self.time_utils.build_time_conditions(time_conditions["time"], prefix)
+            time_condition = self.time_utils.build_time_conditions(time_conditions["time"], prefix)
+            if time_condition:
+                conditions.append(time_condition)
+
+         # 유효한 조건만 추가
+        if conditions:
+            base_query += " AND " + " AND ".join(conditions) + "\n"
 
         return base_query
 
@@ -88,5 +99,9 @@ class FilterManager:
         # 요금 조건 필터링 (fare)
         if "fare" in conditions:
             base_query += " AND fare <= {}\n".format(float(conditions["fare"]))
-            
+
+        # 중복된 AND 제거
+        base_query = base_query.replace("AND  AND", "AND").strip()
+        
         return base_query
+    

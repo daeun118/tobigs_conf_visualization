@@ -1,16 +1,17 @@
 from matplotlib import rc
 from utils.db_manager import DBManager
 from utils.filter import FilterManager
+from visualizations.visualization_mapper import VISUALIZATION_FUNCTIONS
 
 # matplotlib 한글깨짐 방지
-rc('font', family='Malgun Gothic')  # Windows: 'Malgun Gothic' (Mac의 경우 'AppleGothic')
+rc('font', family='Malgun Gothic')  
 rc('axes', unicode_minus=False)  # 마이너스 기호 깨짐 방지
 
 if __name__ == '__main__':
     # 데이터베이스 연결 정보
     db_config = {
         'host': 'localhost',
-        'database': 'example_db',
+        'database': 'flight',
         'user': 'postgres',
         'password': '0118',
         'port': 5432
@@ -27,11 +28,8 @@ if __name__ == '__main__':
     "arrival_country": "대한민국",
     "depart_airport": ["김포국제공항", "인천국제공항"],
     "arrival_airport": "제주국제공항",
-    "airline": ["제주항공", "대한항공"],
     "depart_time(dep)": {
-        "date": "1월 둘째주",
-        "day": ["토요일", "일요일"],
-        "time": "오후"
+        "date": "1월",
     },
     "arrival_time(arr)": {
         "time": {
@@ -39,11 +37,11 @@ if __name__ == '__main__':
             "end": "22:00"
         }
     },
-    "fare": "50000",
+    "fare": "1000000",
     "visualization": {
         "type": "calendar_heatmap",
     }
-}
+    }
 
     # SQL 쿼리 생성
     query = filter_manager.generate_query_from_conditions(conditions)
