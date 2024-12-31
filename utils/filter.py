@@ -39,7 +39,7 @@ class FilterManager:
 
     # 조건이 두 개 이상일 경우 더하는 함수  
     def _add_condition(self, base_query, column, value, is_list=False):
-        if value != "all":
+        if value != "all": # all일 경우 필터링이 필요없으니까
             if is_list:
                 values = "', '".join(value)
                 base_query += f" AND {column} IN ('{values}')\n"
@@ -71,6 +71,11 @@ class FilterManager:
                 base_query = self._add_condition(base_query, "airline", airline)
 
         # 출발 국가 필터링 (depart_country)
+        '''
+        입력된 조건이 단일 값인지, 복수 값(리스트)인지 구별하고,
+        단일 값 -> SQL 쿼리 '=', 복수 값 -> SQL 쿼리 'in' 조건을 추가해야 함.
+        위 작업을 위해 is_list=isinstance(conditions["조건"], list) -> 리스트인지 구별
+        '''
         if "depart_country" in conditions:
             base_query = self._add_condition(base_query, "depart_country",conditions["depart_country"], is_list=isinstance(conditions["depart_country"], list))
         
@@ -85,6 +90,10 @@ class FilterManager:
         # 도착 공항 필터링 (arrival_airport)
         if "arrival_airport" in conditions:
             base_query = self._add_condition(base_query, "arrival_airport", conditions["arrival_airport"], is_list=isinstance(conditions["arrival_airport"], list))
+
+        # 좌석 등급 필터링(seat_class)
+        if "seat_class" in conditions:
+            base_query = self._add_condition(base_query, "seat_class", conditions["seat_class"], is_list=isinstance(conditions["seat_class"], list))
 
         # 출발 시간 필터링 (depart_time(dep))
         if "depart_time(dep)" in conditions:
