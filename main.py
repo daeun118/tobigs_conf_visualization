@@ -33,11 +33,11 @@ if __name__ == '__main__':
     conditions = {
         "depart_country": "대한민국",
         "arrival_country": "대한민국",
-        "depart_airport": ["김포국제공항", "인천국제공항"],
-        "arrival_airport": "제주국제공항",
+        "airport_code_dep": ["GMP", "ICN"],
+        "airport_code_arr": "CJU",
         "seat_class": "비즈니스석",
         "depart_time(dep)": {
-            "date": "1월 둘째주",
+            "date": "1월",
         },
         "arrival_time(arr)": {
             "time": {
