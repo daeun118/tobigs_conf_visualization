@@ -35,7 +35,8 @@ if __name__ == '__main__':
         "arrival_country": "대한민국",
         "airport_code_dep": ["GMP", "ICN"],
         "airport_code_arr": "CJU",
-        "seat_class": "비즈니스석",
+        "seat_class": "일반석",
+        "airline": "lcc",
         "depart_time(dep)": {
             "date": "1월",
         },
@@ -47,7 +48,7 @@ if __name__ == '__main__':
         },
         "fare": "1000000",
         "visualization": {
-            "type": "line_graph",
+            "type": "calendar_heatmap",
         }
     }
 

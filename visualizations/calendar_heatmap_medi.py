@@ -69,4 +69,12 @@ def calendar_heatmap_medi(data):
 
         plt.tight_layout()
 
+        # 이미지 저장 (고정 경로로 저장)
+        save_path = "D:/Tobigs/output"
+        os.makedirs(save_path, exist_ok=True)  # 폴더가 없으면 생성
+        today = datetime.today()
+        file_name = f"{today.strftime('%Y-%m-%d_%H-%M-%S')}_line_graph.png"
+        plt.savefig(f"{save_path}/{file_name}", dpi=300, bbox_inches='tight')
+        print(f"이미지가 '{save_path}/{file_name}'에 저장되었습니다.")
+
         plt.show()

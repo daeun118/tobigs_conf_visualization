@@ -36,7 +36,7 @@ def line_graph(data):
     plt.plot(data_grouped[X], data_grouped['median_fare'], color='red', marker='s', linestyle='-', label='Median Fare')
 
     # 그래프 설정
-    plt.title("Line Graph(최근 30일)")
+    plt.title("수집 날짜별 가격 변동 (최근 30일)")
     plt.xlabel("Fetched Date")
     plt.ylabel("Fare")
     plt.gca().yaxis.set_major_formatter(StrMethodFormatter('{x:,.0f}')) # y축 3자리마다 ',' 추가

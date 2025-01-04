@@ -3,6 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import calendar
+import os
+from datetime import datetime
 
 def calendar_heatmap(data):
     """
@@ -56,7 +58,7 @@ def calendar_heatmap(data):
             ax=ax, 
             annot_kws={"size": 15, "color": "black"}
         )
-
+        
         # 6. 축 및 레이블 설정
         ax.set_xticks(np.arange(7) + 0.5)
         ax.set_xticklabels(['월', '화', '수', '목', '금', '토', '일'], fontsize=12, fontweight='bold')
@@ -67,4 +69,13 @@ def calendar_heatmap(data):
         ax.axis('off')
 
         plt.tight_layout()
+
+        # 이미지 저장 (고정 경로로 저장)
+        save_path = "D:/Tobigs/output"
+        os.makedirs(save_path, exist_ok=True)  # 폴더가 없으면 생성
+        today = datetime.today()
+        file_name = f"{today.strftime('%Y-%m-%d_%H-%M-%S')}_line_graph.png"
+        plt.savefig(f"{save_path}/{file_name}", dpi=300, bbox_inches='tight')
+        print(f"이미지가 '{save_path}/{file_name}'에 저장되었습니다.")
+
         plt.show()

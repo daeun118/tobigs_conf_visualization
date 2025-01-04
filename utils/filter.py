@@ -2,6 +2,7 @@
 from utils.date_utils import DateUtils
 from utils.day_utils import DayUtils
 from utils.time_utils import TimeUtils
+from datetime import datetime, timedelta
 
 class FilterManager:
     def __init__(self):
@@ -31,7 +32,7 @@ class FilterManager:
             if time_condition:
                 conditions.append(time_condition)
 
-         # 유효한 조건만 추가
+        # 유효한 조건만 추가
         if conditions:
             base_query += " AND " + " AND ".join(conditions) + "\n"
 
@@ -51,13 +52,17 @@ class FilterManager:
     def generate_query_from_conditions(self, conditions):
         base_query = "SELECT * FROM flight_data WHERE 1=1\n"
 
-        # LCC, FSC, 국내 항공사 분류
+        # ALL, LCC, FSC, 국내 항공사 분류
+        all_airlines = ["대한항공", "아시아나항공", "에어부산", "에어서울", "이스타항공", "제주항공", "진에어", "티웨이항공",
+                        "피치항공", "전일본공수", "일본 항공"]
         lcc_airlines = ["제주항공", "진에어", "티웨이항공", "에어부산", "에어서울", "이스타항공", "피치항공"]
         fsc_airlines = ["대한항공", "아시아나항공", "전일본공수", "일본 항공"]
         domestic_airlines = ["대한항공", "아시아나항공", "에어부산", "에어서울", "이스타항공", "제주항공", "진에어", "티웨이항공"]
 
         # 항공사 필터링 (airline)
-        if "airline" in conditions and conditions["airline"] != "all":
+        if "airline" not in conditions or not conditions["airline"] or conditions["airline"] == "all":
+            base_query = self._add_condition(base_query, "airline", all_airlines, is_list=True)
+        else:
             airline = conditions["airline"]
             if airline == "lcc":
                 base_query = self._add_condition(base_query, "airline", lcc_airlines, is_list=True)
@@ -109,6 +114,16 @@ class FilterManager:
         if "fare" in conditions:
             base_query += " AND fare <= {}\n".format(float(conditions["fare"]))
 
+        # 시각화 타입이 line_graph가 아닐 경우, 어제의 fetched_date만 필터링
+        '''
+        실제 챗봇 만들 때에는 아래 코드로 수정정해야 함 -> 지금은 db에 있는 최신 날짜로만 필터링
+            yesterday = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
+        '''
+
+        if "visualization" in conditions and conditions["visualization"].get("type") != "line_graph":
+            yesterday = '2024-10-29'
+            base_query += f" AND fetched_date = '{yesterday}'\n"
+        
         # 중복된 AND 제거
         base_query = base_query.replace("AND  AND", "AND").strip()
         
