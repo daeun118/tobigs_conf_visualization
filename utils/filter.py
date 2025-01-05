@@ -2,6 +2,7 @@
 from utils.date_utils import DateUtils
 from utils.day_utils import DayUtils
 from utils.time_utils import TimeUtils
+from datetime import datetime, timedelta
 
 class FilterManager:
     def __init__(self):
@@ -31,7 +32,7 @@ class FilterManager:
             if time_condition:
                 conditions.append(time_condition)
 
-         # 유효한 조건만 추가
+        # 유효한 조건만 추가
         if conditions:
             base_query += " AND " + " AND ".join(conditions) + "\n"
 
@@ -51,13 +52,19 @@ class FilterManager:
     def generate_query_from_conditions(self, conditions):
         base_query = "SELECT * FROM flight_data WHERE 1=1\n"
 
-        # LCC, FSC, dom(domestic) 분류류
+
+        # ALL, LCC, FSC, 국내 항공사 분류
+        all_airlines = ["대한항공", "아시아나항공", "에어부산", "에어서울", "이스타항공", "제주항공", "진에어", "티웨이항공",
+                        "피치항공", "전일본공수", "일본 항공"]
+
         lcc_airlines = ["제주항공", "진에어", "티웨이항공", "에어부산", "에어서울", "이스타항공", "피치항공"]
         fsc_airlines = ["대한항공", "아시아나항공", "전일본공수", "일본 항공"]
         domestic_airlines = ["대한항공", "아시아나항공", "에어부산", "에어서울", "이스타항공", "제주항공", "진에어", "티웨이항공"]
 
         # 항공사 필터링 (airline)
-        if "airline" in conditions and conditions["airline"] != "all":
+        if "airline" not in conditions or not conditions["airline"] or conditions["airline"] == "all":
+            base_query = self._add_condition(base_query, "airline", all_airlines, is_list=True)
+        else:
             airline = conditions["airline"]
             if airline == "lcc":
                 base_query = self._add_condition(base_query, "airline", lcc_airlines, is_list=True)
@@ -83,17 +90,22 @@ class FilterManager:
         if "arrival_country" in conditions:
             base_query = self._add_condition(base_query, "arrival_country", conditions["arrival_country"], is_list=isinstance(conditions["arrival_country"], list))
         
-        # 출발 공항 필터링 (airport_code_dep) -> 코드로 필터링
-        if "airport_code_dep" in conditions:
-            base_query = self._add_condition(base_query, "airport_code_dep", conditions["airport_code_dep"], is_list=isinstance(conditions["airport_code_dep"], list))
+        # 출발 공항 필터링 (depart_airport) -> 코드로 필터링
+        if "depart_airport" in conditions:
+            base_query = self._add_condition(base_query, "airport_code_dep", conditions["depart_airport"], is_list=isinstance(conditions["depart_airport"], list))
         
-        # 도착 공항 필터링 (airport_code_arr) -> 코드로 필터링
-        if "airport_code_arr" in conditions:
-            base_query = self._add_condition(base_query, "airport_code_arr", conditions["airport_code_arr"], is_list=isinstance(conditions["airport_code_arr"], list))
+        # 도착 공항 필터링 (arrival_airport) -> 코드로 필터링
+        if "arrival_airport" in conditions:
+            base_query = self._add_condition(base_query, "airport_code_arr", conditions["arrival_airport"], is_list=isinstance(conditions["arrival_airport"], list))
 
-        # 좌석 등급 필터링(seat_class)
+        # 좌석 등급 필터링 (seat_class)
         if "seat_class" in conditions:
+            # 조건이 존재할 경우 처리
             base_query = self._add_condition(base_query, "seat_class", conditions["seat_class"], is_list=isinstance(conditions["seat_class"], list))
+        else:
+            # 조건이 없는 경우 기본값 설정
+            default_seat_classes = ["일반석", "할인석", "특가석"]
+            base_query = self._add_condition(base_query, "seat_class", default_seat_classes, is_list=True)
 
         # 출발 시간 필터링 (depart_time(dep))
         if "depart_time(dep)" in conditions:
@@ -109,6 +121,16 @@ class FilterManager:
         if "fare" in conditions:
             base_query += " AND fare <= {}\n".format(float(conditions["fare"]))
 
+        # 시각화 타입이 line_graph가 아닐 경우, 어제의 fetched_date만 필터링
+        '''
+        실제 챗봇 만들 때에는 아래 코드로 수정정해야 함 -> 지금은 db에 있는 최신 날짜로만 필터링
+            yesterday = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
+        '''
+
+        if "visualization" in conditions and conditions["visualization"].get("type") != "line_graph":
+            yesterday = '2024-10-29'
+            base_query += f" AND fetched_date = '{yesterday}'\n"
+        
         # 중복된 AND 제거
         base_query = base_query.replace("AND  AND", "AND").strip()
         
