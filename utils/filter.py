@@ -53,7 +53,7 @@ class FilterManager:
         base_query = "SELECT * FROM flight_data WHERE 1=1\n"
 
 
-        # ALL, LCC, FSC, 국내 항공사 분류
+        # ALL, LCC, FSC, dom(domestic) 분류
         all_airlines = ["대한항공", "아시아나항공", "에어부산", "에어서울", "이스타항공", "제주항공", "진에어", "티웨이항공",
                         "피치항공", "전일본공수", "일본 항공"]
 
