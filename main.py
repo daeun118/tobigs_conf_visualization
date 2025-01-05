@@ -20,7 +20,7 @@ if __name__ == '__main__':
         'password': '0118',
         'port': 5432
         }
-
+    
     # DBManager 초기화
     db_manager = DBManager(db_config)
     # FilterManager 초기화
@@ -32,25 +32,16 @@ if __name__ == '__main__':
     # 조건 정의
     conditions = {
         "depart_country": "대한민국",
-        "arrival_country": "대한민국",
-        "airport_code_dep": ["GMP", "ICN"],
-        "airport_code_arr": "CJU",
-        "seat_class": "일반석",
-        "airline": "lcc",
+        "arrival_country": ["일본", "대한민국"],
+        "depart_airport": ["ICN", "GMP"],
+        "airline": "all",
         "depart_time(dep)": {
-            "date": "1월",
+            "date": "1월"
         },
-        "arrival_time(arr)": {
-            "time": {
-                "start": "18:00",
-                "end": "22:00"
-            }
-        },
-        "fare": "1000000",
         "visualization": {
-            "type": "calendar_heatmap",
+            "type": "city_bar_graph",
         }
-    }
+        }   
 
     # SQL 쿼리 생성
     query = filter_manager.generate_query_from_conditions(conditions)

@@ -88,17 +88,22 @@ class FilterManager:
         if "arrival_country" in conditions:
             base_query = self._add_condition(base_query, "arrival_country", conditions["arrival_country"], is_list=isinstance(conditions["arrival_country"], list))
         
-        # 출발 공항 필터링 (airport_code_dep) -> 코드로 필터링
-        if "airport_code_dep" in conditions:
-            base_query = self._add_condition(base_query, "airport_code_dep", conditions["airport_code_dep"], is_list=isinstance(conditions["airport_code_dep"], list))
+        # 출발 공항 필터링 (depart_airport) -> 코드로 필터링
+        if "depart_airport" in conditions:
+            base_query = self._add_condition(base_query, "airport_code_dep", conditions["depart_airport"], is_list=isinstance(conditions["depart_airport"], list))
         
-        # 도착 공항 필터링 (airport_code_arr) -> 코드로 필터링
-        if "airport_code_arr" in conditions:
-            base_query = self._add_condition(base_query, "airport_code_arr", conditions["airport_code_arr"], is_list=isinstance(conditions["airport_code_arr"], list))
+        # 도착 공항 필터링 (arrival_airport) -> 코드로 필터링
+        if "arrival_airport" in conditions:
+            base_query = self._add_condition(base_query, "airport_code_arr", conditions["arrival_airport"], is_list=isinstance(conditions["arrival_airport"], list))
 
-        # 좌석 등급 필터링(seat_class)
+        # 좌석 등급 필터링 (seat_class)
         if "seat_class" in conditions:
+            # 조건이 존재할 경우 처리
             base_query = self._add_condition(base_query, "seat_class", conditions["seat_class"], is_list=isinstance(conditions["seat_class"], list))
+        else:
+            # 조건이 없는 경우 기본값 설정
+            default_seat_classes = ["일반석", "할인석", "특가석"]
+            base_query = self._add_condition(base_query, "seat_class", default_seat_classes, is_list=True)
 
         # 출발 시간 필터링 (depart_time(dep))
         if "depart_time(dep)" in conditions:
