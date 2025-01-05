@@ -51,7 +51,7 @@ class FilterManager:
     def generate_query_from_conditions(self, conditions):
         base_query = "SELECT * FROM flight_data WHERE 1=1\n"
 
-        # LCC, FSC, 국내 항공사 분류
+        # LCC, FSC, dom(domestic) 분류류
         lcc_airlines = ["제주항공", "진에어", "티웨이항공", "에어부산", "에어서울", "이스타항공", "피치항공"]
         fsc_airlines = ["대한항공", "아시아나항공", "전일본공수", "일본 항공"]
         domestic_airlines = ["대한항공", "아시아나항공", "에어부산", "에어서울", "이스타항공", "제주항공", "진에어", "티웨이항공"]
@@ -63,7 +63,7 @@ class FilterManager:
                 base_query = self._add_condition(base_query, "airline", lcc_airlines, is_list=True)
             elif airline == "fsc":
                 base_query = self._add_condition(base_query, "airline", fsc_airlines, is_list=True)
-            elif airline == "국내 항공사":
+            elif airline == "dom":
                 base_query = self._add_condition(base_query, "airline", domestic_airlines, is_list=True)
             elif isinstance(airline, list):  # 사용자가 직접 리스트를 넘긴 경우
                 base_query = self._add_condition(base_query, "airline", airline, is_list=True)
